@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  db:
+    image: mariadb:11
+    container_name: calculator-db
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_NAME:-calc_data}"
+    ports:
+      - "${HOST_DB_PORT:-3306}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  app:
+    image: ${DOCKERHUB_REPO}:${IMAGE_TAG:-latest}
+    build: .
+    container_name: calculator-app
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: "${DB_NAME:-calc_data}"
+      # make sure your DB_USER name is correct mine is root
+      DB_USER: "${DB_USER:-root}"
+      # make sure your DB_PASSWORD is correct mine is root
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DISPLAY: host.docker.internal:0
+
+volumes:
+  db_data:
